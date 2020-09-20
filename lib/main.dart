@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+// Import the firebase_core plugin
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 void main() => runApp(ChatApp());
 
 class ChatApp extends StatelessWidget {
