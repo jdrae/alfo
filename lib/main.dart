@@ -1,6 +1,6 @@
+import 'package:chatbot/screen/chatscreen.dart';
 import 'package:flutter/material.dart';
-import 'widgets/chatscreen.dart';
-import 'database/messages.dart';
+import 'screen/chatscreen.dart';
 
 
 void main() => runApp(ChatApp());
@@ -15,9 +15,10 @@ class ChatApp extends StatelessWidget {
       body: Center(
         child: SizedBox(
           width: 400,
-          height: 300,
+          height: 600,
           child: Card(
-            child: Container(child: GetChatroom('mebot', 'intro')),
+            // child: Container(child: GetChatroom('mebot', 'intro')),
+            child: ChatScreen(),
           ),
         ),
       ),
