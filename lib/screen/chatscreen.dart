@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:chatbot/widget/bubble.dart';
-import 'package:flutter/scheduler.dart';
-import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ChatScreen extends StatefulWidget {
   @override
@@ -10,6 +9,8 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   final List<Bubble> _messages = [];
+  int cnt = 1;
+
   final _textController = TextEditingController();
   
   bool _isComposing = false;
@@ -39,26 +40,37 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       _messages.insert(0,message);
     });
     message.animationController.forward();
-    this._answer();
+    if(cnt < 6){
+      this._answer();
+      cnt++;
+    }
   }
 
   void _answer(){
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-    Bubble rmsg = Bubble(
-      text: "hihi",
-      animationController: AnimationController(
-        duration: Duration(milliseconds: 400),
-        vsync: this,
-      ),
-      isMe: false
-    );
-    
-    Future.delayed(Duration(milliseconds: 1300)).then((_) {
-    setState(() { //수정하고 다시 빌드 -> 동기화 작업만 수행. 비동기는 완료전에 다시 수행
-      _messages.insert(0,rmsg);
+    firestore.collection("bots").doc("webot").collection("chat1")
+    .where('id', isEqualTo: cnt).get()
+    .then((querySnapshot) {
+      querySnapshot.docs.forEach((doc) {
+        Bubble rmsg = Bubble(
+          text: doc.get('msg'),
+          animationController: AnimationController(
+            duration: Duration(milliseconds: 400),
+            vsync: this,
+          ),
+          isMe: false
+        );
+
+        Future.delayed(Duration(milliseconds: 1300)).then((_) {
+        setState(() { //수정하고 다시 빌드 -> 동기화 작업만 수행. 비동기는 완료전에 다시 수행
+          _messages.insert(0,rmsg);
+        });
+        rmsg.animationController.forward();
+        });
+      });
     });
-    rmsg.animationController.forward();
-    });
+
   }
 
   Widget _buildTextComposer() {
