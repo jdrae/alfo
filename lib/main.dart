@@ -9,6 +9,10 @@ class ChatApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      // initialRoute: '/',
+      // routes: {
+      //   '/': (context) => ChatScreen(),
+      // },
       debugShowCheckedModeBanner: false,
       home: Scaffold(
       backgroundColor: Colors.grey[200],
@@ -17,8 +21,7 @@ class ChatApp extends StatelessWidget {
           width: 400,
           height: 600,
           child: Card(
-            // child: Container(child: GetChatroom('mebot', 'intro')),
-            child: ChatScreen(),
+            child: ChatScreen("mebot","intro"),
           ),
         ),
       ),

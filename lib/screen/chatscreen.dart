@@ -3,16 +3,21 @@ import 'package:chatbot/widget/bubble.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ChatScreen extends StatefulWidget {
+  final String botName;
+  final String docId;
+  ChatScreen(this.botName, this.docId);
+
   @override
   _ChatScreenState createState() => _ChatScreenState();
 }
 
 class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
+  FirebaseFirestore firestore = FirebaseFirestore.instance;
+
   final List<Bubble> _messages = [];
-  int cnt = 1;
+  int cnt = 1; int size = 0;
 
   final _textController = TextEditingController();
-  
   bool _isComposing = false;
 
   @override
@@ -23,56 +28,57 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
    super.dispose();
   }
 
+  Bubble makeBubble(String text, bool isMe){
+    return Bubble(
+          text: text,
+          animationController: AnimationController(
+            duration: Duration(milliseconds: 400),
+            vsync: this,
+          ),
+          isMe: isMe
+        );
+  }
+
   void _handleSubmitted(String text) {
     _textController.clear();
     setState(() {
       _isComposing = false;
     });
-    Bubble message = Bubble(
-      text: text,
-      animationController: AnimationController(
-        duration: Duration(milliseconds: 400),
-        vsync: this,
-      ),
-      isMe: true
-    );
-    setState(() { //수정하고 다시 빌드 -> 동기화 작업만 수행. 비동기는 완료전에 다시 수행
+    Bubble message = makeBubble(text, true);
+    setState(() {
       _messages.insert(0,message);
     });
     message.animationController.forward();
-    if(cnt < 6){
+    if(size != 0 && cnt <= size){
       this._answer();
       cnt++;
     }
   }
 
   void _answer(){
-    FirebaseFirestore firestore = FirebaseFirestore.instance;
-
-    firestore.collection("bots").doc("webot").collection("chat1")
+    firestore.collection("bots").doc(widget.botName).collection(widget.docId)
     .where('id', isEqualTo: cnt).get()
     .then((querySnapshot) {
       querySnapshot.docs.forEach((doc) {
-        Bubble rmsg = Bubble(
-          text: doc.get('msg'),
-          animationController: AnimationController(
-            duration: Duration(milliseconds: 400),
-            vsync: this,
-          ),
-          isMe: false
-        );
-
-        Future.delayed(Duration(milliseconds: 1300)).then((_) {
-        setState(() { //수정하고 다시 빌드 -> 동기화 작업만 수행. 비동기는 완료전에 다시 수행
-          _messages.insert(0,rmsg);
-        });
-        rmsg.animationController.forward();
+        Bubble rmsg = this.makeBubble(doc.get('msg'), false);
+        int sec = doc.get('msg').toString().length * 150; // 글자 길이에 따라 답장 속도
+        Future.delayed(Duration(milliseconds: sec)).then((_) {
+          setState(() {
+            _messages.insert(0,rmsg);
+          });
+          rmsg.animationController.forward();
         });
       });
     });
-
   }
 
+  void getMsgSize(){
+    firestore.collection('bots').doc(widget.botName).collection(widget.docId)
+    .get().then((snap) {
+      size = snap.size;
+    });
+  }
+  
   Widget _buildTextComposer() {
     return IconTheme(
       data: IconThemeData(color: Colors.black87),
@@ -108,7 +114,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   
   @override
   Widget build(BuildContext context){
-  
+    if(size == 0){ this.getMsgSize();}
     return Column(
       children: [
         Flexible(
