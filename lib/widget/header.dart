@@ -1,32 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Header extends StatelessWidget {
+  final String name;
+  Header(this.name);
+
 
   @override
   Widget build(BuildContext context) {
-    return AppBar(
-        brightness: Brightness.dark,
-        centerTitle: true,
-        title: RichText(
-          textAlign: TextAlign.center,
-          text: TextSpan(
-            children: [
-              TextSpan(
-                  text: "나",
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                  )),
-              TextSpan(text: '\n'),
-            ],
-          ),
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(width: 1.0, color: Colors.black12),
         ),
-        leading: IconButton(
-            icon: Icon(Icons.arrow_back_ios),
-            color: Colors.white,
+      ),
+      padding: const EdgeInsets.all(8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: <Widget>[
+          IconButton(
+            alignment: Alignment.center,
+            icon: Icon(Icons.arrow_back, color: Colors.black12),
             onPressed: () {
-              Navigator.pop(context);
-            }),
+              
+            },
+          ),
+          Container(
+            margin: EdgeInsets.symmetric(horizontal: 10),
+            child: CircleAvatar(
+              child: Text(name), radius: 16, foregroundColor: Colors.green,
+          )),
+          Text(name, style: TextStyle(fontSize: 18)),
+        ],
+      ),
     );
   }
 }

@@ -1,7 +1,10 @@
-import 'package:chatbot/screen/chatscreen.dart';
 import 'package:flutter/material.dart';
-import 'screen/chatscreen.dart';
-
+import 'screen/intro.dart';
+import 'screen/me-we.dart';
+import 'screen/me-you.dart';
+import 'screen/me.dart';
+import 'screen/you.dart';
+import 'screen/we.dart';
 
 void main() => runApp(ChatApp());
 
@@ -9,23 +12,16 @@ class ChatApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      // initialRoute: '/',
-      // routes: {
-      //   '/': (context) => ChatScreen(),
-      // },
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-      backgroundColor: Colors.grey[200],
-      body: Center(
-        child: SizedBox(
-          width: 400,
-          height: 600,
-          child: Card(
-            child: ChatScreen("mebot","intro"),
-          ),
-        ),
-      ),
-    ),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => Intro(),
+        '/we': (context) => WeBot(),
+        '/you': (context) => YouBot(),
+        '/me': (context) => MeBot(),
+        '/me-we': (context) => MeWeBot(),
+        '/me-you': (context) => MeYouBot(),
+      },
+      debugShowCheckedModeBanner: false
     );
   }
 }

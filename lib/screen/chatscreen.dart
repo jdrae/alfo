@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:chatbot/widget/bubble.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:chatbot/widget/header.dart';
 
 class ChatScreen extends StatefulWidget {
   final String botName;
@@ -15,7 +16,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
 
   final List<Bubble> _messages = [];
-  int cnt = 1; int size = 0;
+  int cnt = 1; int size = 0; String name = "";
 
   final _textController = TextEditingController();
   bool _isComposing = false;
@@ -78,7 +79,14 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       size = snap.size;
     });
   }
-  
+
+  void getName(){
+    firestore.collection('bots').doc(widget.botName)
+    .get().then((snap) {
+      setState((){name = snap.get('name');});
+    });
+  }
+
   Widget _buildTextComposer() {
     return IconTheme(
       data: IconThemeData(color: Colors.black87),
@@ -115,8 +123,11 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context){
     if(size == 0){ this.getMsgSize();}
+    if(name == "") this.getName();
+
     return Column(
       children: [
+        Header(this.name),
         Flexible(
           child: ListView.builder(
             padding: EdgeInsets.all(8.0),
