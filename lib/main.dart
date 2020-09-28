@@ -5,6 +5,7 @@ import 'screen/me-you.dart';
 import 'screen/me.dart';
 import 'screen/you.dart';
 import 'screen/we.dart';
+import 'screen/manage.dart';
 
 void main() => runApp(ChatApp());
 
@@ -20,6 +21,7 @@ class ChatApp extends StatelessWidget {
         '/me': (context) => MeBot(),
         '/me-we': (context) => MeWeBot(),
         '/me-you': (context) => MeYouBot(),
+        '/manage': (context) => ManageScreen(),
       },
       debugShowCheckedModeBanner: false
     );
