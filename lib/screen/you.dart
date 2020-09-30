@@ -12,7 +12,7 @@ class YouBot extends StatelessWidget {
           width: 400,
           height: 600,
           child: Card(
-            child: ChatScreen("youbot","chat1"),
+            child: ChatScreen("youbot"),
           ),
         ),
       ),

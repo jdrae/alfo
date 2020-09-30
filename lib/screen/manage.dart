@@ -61,10 +61,39 @@ class EditScreen extends StatelessWidget{
           width: 400,
           height: 700,
           child: Card(
-            child: Text(bot.description)
+            child: Column(
+              children: [
+                Text(bot.description),
+                MsgTile("jo", 1, "ho")
+              ]
+            )
           ),
         ),
       ),
+    );
+  }
+}
+
+class MsgTile extends StatelessWidget{
+  final bot, id ,msg;
+  MsgTile(this.bot, this.id, this.msg);
+
+  @override
+  Widget build(BuildContext context){
+    return Container(      
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(width: 1.0, color: Colors.black12),
+        ),
+      ),
+      child: Container(
+        padding:EdgeInsets.all(15),
+        child: 
+        msg != null ?
+        Text(msg, 
+              style: TextStyle(fontSize: 15))
+        : Text("fail")
+      )
     );
   }
 }

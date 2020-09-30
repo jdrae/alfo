@@ -12,7 +12,7 @@ class WeBot extends StatelessWidget {
           width: 400,
           height: 600,
           child: Card(
-            child: ChatScreen("webot","chat1"),
+            child: ChatScreen("webot"),
           ),
         ),
       ),

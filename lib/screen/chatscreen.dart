@@ -5,8 +5,7 @@ import 'package:chatbot/widget/header.dart';
 
 class ChatScreen extends StatefulWidget {
   final String botName;
-  final String docId;
-  ChatScreen(this.botName, this.docId);
+  ChatScreen(this.botName);
 
   @override
   _ChatScreenState createState() => _ChatScreenState();
@@ -57,7 +56,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   }
 
   void _answer(){
-    firestore.collection("bots").doc(widget.botName).collection(widget.docId)
+    firestore.collection(widget.botName)
     .where('id', isEqualTo: cnt).get()
     .then((querySnapshot) {
       querySnapshot.docs.forEach((doc) {
@@ -74,18 +73,12 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   }
 
   void getMsgSize(){
-    firestore.collection('bots').doc(widget.botName).collection(widget.docId)
+    firestore.collection(widget.botName)
     .get().then((snap) {
       size = snap.size;
     });
   }
 
-  void getName(){
-    firestore.collection('bots').doc(widget.botName)
-    .get().then((snap) {
-      setState((){name = snap.get('name');});
-    });
-  }
 
   Widget _buildTextComposer() {
     return IconTheme(
@@ -123,11 +116,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context){
     if(size == 0){ this.getMsgSize();}
-    if(name == "") this.getName();
 
     return Column(
       children: [
-        Header(this.name),
+        Header("이름"),
         Flexible(
           child: ListView.builder(
             padding: EdgeInsets.all(8.0),
