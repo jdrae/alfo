@@ -56,9 +56,15 @@ class EditScreen extends StatefulWidget{
 
 class _EditScreenState extends State<EditScreen>{
   FirebaseFirestore firestore = FirebaseFirestore.instance;
-
+  int size = 0;
   final _textController = TextEditingController();
-  bool _isComposing = false;
+
+  void getMsgSize(){
+    firestore.collection(widget.bot.name)
+    .get().then((snap) {
+      size = snap.size;
+    });
+  }
 
   Widget _buildTextComposer() {
     return Container(
@@ -69,11 +75,6 @@ class _EditScreenState extends State<EditScreen>{
             child: TextField(
               decoration: InputDecoration(border: OutlineInputBorder(), labelText: 'message'),
               controller: _textController,
-              onChanged: (String text){
-                setState((){
-                  _isComposing = text.length > 0;
-                });
-              },
               onSubmitted: _handleSubmitted,
             ),
           ),
@@ -83,9 +84,7 @@ class _EditScreenState extends State<EditScreen>{
                 child: Text('추가'),
                 color: Colors.blue,
                 textColor: Colors.white,
-                onPressed: _isComposing
-                ? () => _handleSubmitted(_textController.text)
-                : null,
+                onPressed: () => _handleSubmitted(_textController.text),
             ),
           )
         ]
@@ -93,16 +92,19 @@ class _EditScreenState extends State<EditScreen>{
     );
   }
   void _handleSubmitted(String text) {
-    firestore.collection(widget.bot.name).add({'name': widget.bot.description, 'id': 3, 'msg': text});
+    String botName = widget.bot.name;
+    CollectionReference db = firestore.collection(botName);
+    int newSize = size + 1;
+    db.add({'name': widget.bot.description, 'id': newSize, 'msg': text});
     _textController.clear();
-    setState(() {
-      _isComposing = false;
-    });
-    print(text);
+    
+    setState((){size = newSize;});
   }
 
   @override
   Widget build(BuildContext context){
+    if(size == 0){ this.getMsgSize();}
+
     return Scaffold(
       backgroundColor: Colors.grey[200],
       appBar: AppBar(title: Text(widget.bot.description),),
