@@ -1,5 +1,5 @@
-import 'package:chatbot/screen/chatscreen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:random_string/random_string.dart';
 
@@ -68,6 +68,8 @@ class _EditScreenState extends State<EditScreen>{
   List<Chat> chatlist = new List<Chat>();
   int size = 0;
   final _textController = TextEditingController();
+  final _updateMsgController = TextEditingController();
+  final _updateIdController = TextEditingController();
 
   void getMsgSize(){
     firestore.collection(widget.bot.name)
@@ -121,7 +123,67 @@ class _EditScreenState extends State<EditScreen>{
   }
 
   void _onModified(String unique){
-    print(unique);
+    showDialog(context: context,
+      builder: (BuildContext context){
+        return AlertDialog(
+          title: Text("수정 내용을 입력하세요"),
+          content: TextField(
+              controller: _updateMsgController,
+          ),
+          actions: [
+            FlatButton(
+              child: Text("확인"),
+              onPressed: (){this._handleUpdated(unique, _updateMsgController.text, "msg"); Navigator.pop(context);},
+            ),
+            FlatButton(
+              child: Text("취소"),
+              onPressed: (){Navigator.pop(context);},
+            )
+          ],
+        );
+      }
+    );
+  }
+  
+  void _handleUpdated(String unique, dynamic value, String field){
+    _updateMsgController.clear();
+    
+    firestore.collection(widget.bot.name).where('unique', isEqualTo: unique)
+    .get().then((querySnapshot) {
+      querySnapshot.docs.forEach((doc) {
+        doc.reference.update({field: value});
+      });
+    });
+  }
+
+  void _onIdModified(String unique){
+    showDialog(context: context,
+      builder: (BuildContext context){
+        return AlertDialog(
+          title: Text("순서를 입력하세요"),
+          content: TextField(
+              controller: _updateIdController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(hintText: 'number only'),
+              inputFormatters: <TextInputFormatter>[
+                  FilteringTextInputFormatter.digitsOnly
+              ],
+          ),
+          actions: [
+            FlatButton(
+              child: Text("확인"),
+              onPressed: (){
+                this._handleUpdated(unique, int.parse(_updateIdController.text), "id"); Navigator.pop(context);
+              },
+            ),
+            FlatButton(
+              child: Text("취소"),
+              onPressed: (){Navigator.pop(context);},
+            )
+          ],
+        );
+      }
+    );
   }
 
   @override
@@ -139,7 +201,7 @@ class _EditScreenState extends State<EditScreen>{
           child: Column(
             children:[
             this._buildTextComposer(),
-            Flexible(child: GetMessages(widget.bot.name, this._onDeleted, this._onModified)),
+            Flexible(child: GetMessages(widget.bot.name, this._onDeleted, this._onModified, this._onIdModified)),
             ]
           )
           ),
@@ -152,7 +214,9 @@ class MsgTile extends StatelessWidget{
   final Chat chat;
   final Function(String) _onDeleted;
   final Function(String) _onModified;
-  MsgTile(this.chat, this._onDeleted, this._onModified);
+  final Function(String) _onIdModified;
+
+  MsgTile(this.chat, this._onDeleted, this._onModified, this._onIdModified);
 
   @override
   Widget build(BuildContext context){
@@ -168,8 +232,10 @@ class MsgTile extends StatelessWidget{
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
               Container(
-                margin: EdgeInsets.only(right: 12),
-                child: Text(chat.id.toString(), style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),),
+                child: TextButton(
+                  child: Text(chat.id.toString()),
+                  onPressed: () => _onIdModified(chat.unique),
+                )
               ),
               Container(
                 margin: EdgeInsets.only(right: 8),
@@ -199,8 +265,9 @@ class GetMessages extends StatelessWidget{
   final botName; 
   final Function(String) _onDeleted;
   final Function(String) _onModified;
+  final Function(String) _onIdModified;
 
-  GetMessages(this.botName, this._onDeleted, this._onModified);
+  GetMessages(this.botName, this._onDeleted, this._onModified, this._onIdModified);
   @override
   Widget build(BuildContext context){
     CollectionReference firestore = FirebaseFirestore.instance.collection(botName);
@@ -216,7 +283,7 @@ class GetMessages extends StatelessWidget{
           List<MsgTile> msgs  = new List<MsgTile>();
           querySnapshot.data.docs.forEach((chat) {
             Chat my = Chat(chat.get('name'), chat.get('id'), chat.get('msg'), chat.get('unique'));
-            msgs.add(MsgTile(my, this._onDeleted, this._onModified));
+            msgs.add(MsgTile(my, this._onDeleted, this._onModified, this._onIdModified));
           });
 
           return ListView(children: msgs);
