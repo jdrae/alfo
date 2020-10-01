@@ -101,6 +101,20 @@ class _EditScreenState extends State<EditScreen>{
     setState((){size = newSize;});
   }
 
+  void _onDeleted(int id){
+    firestore.collection(widget.bot.name).where('id', isEqualTo: id)
+    .get().then((querySnapshot) {
+      querySnapshot.docs.forEach((doc) {
+        doc.reference.delete();
+      });
+    });
+    setState((){size = size-1;});
+  }
+
+  void _onModified(int id){
+    print(id);
+  }
+
   @override
   Widget build(BuildContext context){
     if(size == 0){ this.getMsgSize();}
@@ -116,7 +130,7 @@ class _EditScreenState extends State<EditScreen>{
           child: Column(
             children:[
             this._buildTextComposer(),
-            Flexible(child: GetMessages(widget.bot.name),)
+            Flexible(child: GetMessages(widget.bot.name, this._onDeleted, this._onModified)),
             ]
           )
           ),
@@ -127,7 +141,11 @@ class _EditScreenState extends State<EditScreen>{
 
 class MsgTile extends StatelessWidget{
   final bot, id ,msg;
-  MsgTile(this.bot, this.id, this.msg);
+  final Function(int) _onDeleted;
+  final Function(int) _onModified;
+
+  MsgTile(this.bot, this.id, this.msg, this._onDeleted, this._onModified);
+  
 
   @override
   Widget build(BuildContext context){
@@ -142,19 +160,28 @@ class MsgTile extends StatelessWidget{
         child: Row(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-          Container(
-            margin: EdgeInsets.only(right: 12),
-            child: Text(id.toString(), style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),),
-          ),
-          Container(
-            margin: EdgeInsets.only(right: 8),
-            child: CircleAvatar(
-              child: Text(bot[0]), radius: 16, foregroundColor: Colors.green,
-          )),
-          msg != null ?
-          Expanded(child: Text(msg, 
-                style: TextStyle(fontSize: 15)))
-          : Text(" ")
+              Container(
+                margin: EdgeInsets.only(right: 12),
+                child: Text(id.toString(), style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),),
+              ),
+              Container(
+                margin: EdgeInsets.only(right: 8),
+                child: CircleAvatar(
+                  child: Text(bot[0]), radius: 16, foregroundColor: Colors.green,
+              )),
+              msg != null ?
+              Expanded(child: Text(msg, 
+                    style: TextStyle(fontSize: 15)))
+              : Text(" ")
+            ,
+            TextButton(
+              child: Text("수정"),
+              onPressed: () => _onModified(id),
+            ),
+            TextButton(
+              child: Text("삭제"),
+              onPressed: () => _onDeleted(id),
+            ),
         ],)
       )
     );
@@ -162,7 +189,11 @@ class MsgTile extends StatelessWidget{
 }
 
 class GetMessages extends StatelessWidget{
-  final botName; GetMessages(this.botName);
+  final botName; 
+  final Function(int) _onDeleted;
+  final Function(int) _onModified;
+
+  GetMessages(this.botName, this._onDeleted, this._onModified);
   @override
   Widget build(BuildContext context){
     CollectionReference firestore = FirebaseFirestore.instance.collection(botName);
@@ -177,7 +208,7 @@ class GetMessages extends StatelessWidget{
         if (querySnapshot.connectionState == ConnectionState.done) {
           List<MsgTile> msgs  = new List<MsgTile>();
           querySnapshot.data.docs.forEach((chat) {
-            msgs.add(MsgTile(chat.get('name'), chat.get('id'), chat.get('msg')));
+            msgs.add(MsgTile(chat.get('name'), chat.get('id'), chat.get('msg'),  this._onDeleted, this._onModified));
           });
 
           return ListView(children: msgs);
