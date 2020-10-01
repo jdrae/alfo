@@ -10,7 +10,7 @@ class ChatApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      initialRoute: '/me',
+      initialRoute: '/manage',
       routes: {
         '/we': (context) => WeBot(),
         '/you': (context) => YouBot(),

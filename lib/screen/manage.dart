@@ -1,3 +1,4 @@
+import 'package:chatbot/screen/chatscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -37,7 +38,7 @@ class BotList extends StatelessWidget{
           title: Text(bots[index].name),
           onTap: (){
             Navigator.push(context, 
-              MaterialPageRoute(builder: (context) => EditScreen(bot: bots[index]))
+              MaterialPageRoute(builder: (context) => EditScreen(bots[index]))
             );
           },
         );
@@ -46,22 +47,76 @@ class BotList extends StatelessWidget{
   }
 }
 
-class EditScreen extends StatelessWidget{
+class EditScreen extends StatefulWidget{
   final Bot bot;
-  EditScreen({Key key, @required this.bot}) : super(key: key);
+  EditScreen(this.bot);
+  @override
+  _EditScreenState createState() => _EditScreenState();
+}
+
+class _EditScreenState extends State<EditScreen>{
+  FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+  final _textController = TextEditingController();
+  bool _isComposing = false;
+
+  Widget _buildTextComposer() {
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        children: [
+          Flexible(
+            child: TextField(
+              decoration: InputDecoration(border: OutlineInputBorder(), labelText: 'message'),
+              controller: _textController,
+              onChanged: (String text){
+                setState((){
+                  _isComposing = text.length > 0;
+                });
+              },
+              onSubmitted: _handleSubmitted,
+            ),
+          ),
+          Container( 
+            margin: EdgeInsets.symmetric(horizontal: 15),
+            child: FlatButton(
+                child: Text('추가'),
+                color: Colors.blue,
+                textColor: Colors.white,
+                onPressed: _isComposing
+                ? () => _handleSubmitted(_textController.text)
+                : null,
+            ),
+          )
+        ]
+      )
+    );
+  }
+  void _handleSubmitted(String text) {
+    firestore.collection(widget.bot.name).add({'name': widget.bot.description, 'id': 3, 'msg': text});
+    _textController.clear();
+    setState(() {
+      _isComposing = false;
+    });
+    print(text);
+  }
 
   @override
   Widget build(BuildContext context){
     return Scaffold(
       backgroundColor: Colors.grey[200],
-      appBar: AppBar(title: Text(bot.description),),
+      appBar: AppBar(title: Text(widget.bot.description),),
       body: Center(
         child:
           SizedBox(
           width: 400,
           height: 600,
-          child: GetMessages(bot.name)
-          
+          child: Column(
+            children:[
+            this._buildTextComposer(),
+            Flexible(child: GetMessages(widget.bot.name),)
+            ]
+          )
           ),
         ),
       );
@@ -95,8 +150,8 @@ class MsgTile extends StatelessWidget{
               child: Text(bot[0]), radius: 16, foregroundColor: Colors.green,
           )),
           msg != null ?
-          Text(msg, 
-                style: TextStyle(fontSize: 15))
+          Expanded(child: Text(msg, 
+                style: TextStyle(fontSize: 15)))
           : Text(" ")
         ],)
       )
