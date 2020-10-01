@@ -1,6 +1,7 @@
 import 'package:chatbot/screen/chatscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:random_string/random_string.dart';
 
 class ManageScreen extends StatelessWidget {
   @override
@@ -24,6 +25,14 @@ class Bot{
   final String name;
   final String description;
   Bot(this.name, this.description);
+}
+
+class Chat{
+  final String name;
+  final int id;
+  final String msg;
+  final String unique;
+  Chat(this.name, this.id, this.msg, this.unique);
 }
 
 class BotList extends StatelessWidget{
@@ -56,6 +65,7 @@ class EditScreen extends StatefulWidget{
 
 class _EditScreenState extends State<EditScreen>{
   FirebaseFirestore firestore = FirebaseFirestore.instance;
+  List<Chat> chatlist = new List<Chat>();
   int size = 0;
   final _textController = TextEditingController();
 
@@ -95,24 +105,23 @@ class _EditScreenState extends State<EditScreen>{
     String botName = widget.bot.name;
     CollectionReference db = firestore.collection(botName);
     int newSize = size + 1;
-    db.add({'name': widget.bot.description, 'id': newSize, 'msg': text});
+    db.add({'name': widget.bot.description, 'id': newSize, 'msg': text, 'unique': randomString(8)});
     _textController.clear();
     
     setState((){size = newSize;});
   }
 
-  void _onDeleted(int id){
-    firestore.collection(widget.bot.name).where('id', isEqualTo: id)
+  void _onDeleted(String unique){
+    firestore.collection(widget.bot.name).where('unique', isEqualTo: unique)
     .get().then((querySnapshot) {
       querySnapshot.docs.forEach((doc) {
         doc.reference.delete();
       });
     });
-    setState((){size = size-1;});
   }
 
-  void _onModified(int id){
-    print(id);
+  void _onModified(String unique){
+    print(unique);
   }
 
   @override
@@ -140,12 +149,10 @@ class _EditScreenState extends State<EditScreen>{
 }
 
 class MsgTile extends StatelessWidget{
-  final bot, id ,msg;
-  final Function(int) _onDeleted;
-  final Function(int) _onModified;
-
-  MsgTile(this.bot, this.id, this.msg, this._onDeleted, this._onModified);
-  
+  final Chat chat;
+  final Function(String) _onDeleted;
+  final Function(String) _onModified;
+  MsgTile(this.chat, this._onDeleted, this._onModified);
 
   @override
   Widget build(BuildContext context){
@@ -162,25 +169,25 @@ class MsgTile extends StatelessWidget{
           children: [
               Container(
                 margin: EdgeInsets.only(right: 12),
-                child: Text(id.toString(), style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),),
+                child: Text(chat.id.toString(), style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),),
               ),
               Container(
                 margin: EdgeInsets.only(right: 8),
                 child: CircleAvatar(
-                  child: Text(bot[0]), radius: 16, foregroundColor: Colors.green,
+                  child: Text(chat.name[0]), radius: 16, foregroundColor: Colors.green,
               )),
-              msg != null ?
-              Expanded(child: Text(msg, 
+              chat.msg != null ?
+              Expanded(child: Text(chat.msg, 
                     style: TextStyle(fontSize: 15)))
               : Text(" ")
             ,
             TextButton(
               child: Text("수정"),
-              onPressed: () => _onModified(id),
+              onPressed: () => _onModified(chat.unique),
             ),
             TextButton(
               child: Text("삭제"),
-              onPressed: () => _onDeleted(id),
+              onPressed: () => _onDeleted(chat.unique),
             ),
         ],)
       )
@@ -190,8 +197,8 @@ class MsgTile extends StatelessWidget{
 
 class GetMessages extends StatelessWidget{
   final botName; 
-  final Function(int) _onDeleted;
-  final Function(int) _onModified;
+  final Function(String) _onDeleted;
+  final Function(String) _onModified;
 
   GetMessages(this.botName, this._onDeleted, this._onModified);
   @override
@@ -208,7 +215,8 @@ class GetMessages extends StatelessWidget{
         if (querySnapshot.connectionState == ConnectionState.done) {
           List<MsgTile> msgs  = new List<MsgTile>();
           querySnapshot.data.docs.forEach((chat) {
-            msgs.add(MsgTile(chat.get('name'), chat.get('id'), chat.get('msg'),  this._onDeleted, this._onModified));
+            Chat my = Chat(chat.get('name'), chat.get('id'), chat.get('msg'), chat.get('unique'));
+            msgs.add(MsgTile(my, this._onDeleted, this._onModified));
           });
 
           return ListView(children: msgs);
