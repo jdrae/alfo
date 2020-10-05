@@ -48,28 +48,28 @@ class Bubble extends StatelessWidget{
       child: Container(
         alignment: Alignment.topLeft,
         child: Row(
+          mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           Container(
             margin: const EdgeInsets.only(right: 8),
             child: CircleAvatar(child: Text(name[0]), radius: 16, foregroundColor: Colors.green,),
           ),
           Container(
-            child: Container(
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.60, //TODO: 데스크탑에서 깨짐
-              ),
-              padding: EdgeInsets.fromLTRB(10,7,10,7),
-              margin: EdgeInsets.symmetric(vertical: 5),
-              decoration: BoxDecoration(
-                color: Color(0xffe5e4ea),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                text,
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 16,
-                ),
+            constraints: BoxConstraints(
+              maxWidth: 300,
+              //maxWidth: MediaQuery.of(context).size.width * 0.60, //TODO: 데스크탑에서 깨짐
+            ),
+            padding: EdgeInsets.fromLTRB(10,7,10,7),
+            margin: EdgeInsets.symmetric(vertical: 5),
+            decoration: BoxDecoration(
+              color: Color(0xffe5e4ea),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              text,
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 16,
               ),
             ),
           ),

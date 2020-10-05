@@ -14,10 +14,11 @@ class Header extends StatelessWidget {
           bottom: BorderSide(width: 1.0, color: Colors.black12),
         ),
       ),
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(18),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
+          /*
           IconButton(
             alignment: Alignment.center,
             icon: Icon(Icons.arrow_back, color: Colors.black12),
@@ -25,6 +26,7 @@ class Header extends StatelessWidget {
               
             },
           ),
+          */
           Container(
             margin: EdgeInsets.symmetric(horizontal: 10),
             child: CircleAvatar(
