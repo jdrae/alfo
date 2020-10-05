@@ -4,8 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:chatbot/widget/header.dart';
 
 class ChatScreen extends StatefulWidget {
-  final String botName;
-  ChatScreen(this.botName);
+  final String botName; final String name;
+  ChatScreen(this.botName, this.name);
 
   @override
   _ChatScreenState createState() => _ChatScreenState();
@@ -15,10 +15,11 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
 
   final List<Bubble> _messages = [];
-  int cnt = 1; int size = 0; String name = "";
+  int cnt = -1; int size = 0;
 
   final _textController = TextEditingController();
   bool _isComposing = false;
+  final FocusNode _focusNode = FocusNode();
 
   @override
   void dispose() {
@@ -28,8 +29,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
    super.dispose();
   }
 
-  Bubble makeBubble(String text, bool isMe){
+  Bubble makeBubble(String name, String text, bool isMe){
     return Bubble(
+          name: name,
           text: text,
           animationController: AnimationController(
             duration: Duration(milliseconds: 400),
@@ -44,31 +46,35 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     setState(() {
       _isComposing = false;
     });
-    Bubble message = makeBubble(text, true);
+    Bubble message = makeBubble("", text, true);
     setState(() {
       _messages.insert(0,message);
     });
+    _focusNode.requestFocus();
     message.animationController.forward();
-    if(size != 0 && cnt <= size){
+    if(size != 0 && cnt < size-1){
+      ++cnt;
       this._answer();
-      cnt++;
     }
   }
 
   void _answer(){
+    if(cnt == -1) return;
     firestore.collection(widget.botName)
-    .where('id', isEqualTo: cnt).get()
+    .orderBy('id').get()
     .then((querySnapshot) {
-      querySnapshot.docs.forEach((doc) {
-        Bubble rmsg = this.makeBubble(doc.get('msg'), false);
-        int sec = doc.get('msg').toString().length * 150; // 글자 길이에 따라 답장 속도
-        Future.delayed(Duration(milliseconds: sec)).then((_) {
-          setState(() {
-            _messages.insert(0,rmsg);
-          });
-          rmsg.animationController.forward();
+      
+      var doc = querySnapshot.docs[cnt];
+      
+      Bubble rmsg = this.makeBubble(widget.name,doc.get('msg'), false);
+      int sec = doc.get('msg').toString().length * 120; // 글자 길이에 따라 답장 속도
+      Future.delayed(Duration(milliseconds: sec)).then((_) {
+        setState(() {
+          _messages.insert(0,rmsg);
         });
+        rmsg.animationController.forward();
       });
+      
     });
   }
 
@@ -97,6 +103,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
               },
               onSubmitted: _handleSubmitted,
               decoration:  InputDecoration.collapsed(hintText: ''),
+              focusNode: _focusNode,
               ),
             ),
           Container( 
@@ -116,10 +123,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context){
     if(size == 0){ this.getMsgSize();}
-
     return Column(
       children: [
-        Header("이름"),
+        Header(widget.name),
         Flexible(
           child: ListView.builder(
             padding: EdgeInsets.all(8.0),

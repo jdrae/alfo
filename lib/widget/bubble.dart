@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 //메세지 하나
 class Bubble extends StatelessWidget{
-  Bubble({this.text, this.animationController, this.isMe});
+  Bubble({this.name, this.text, this.animationController, this.isMe});
   
+  final name;
   final String text;
   final AnimationController animationController; 
   final bool isMe;
@@ -50,7 +51,7 @@ class Bubble extends StatelessWidget{
         children: <Widget>[
           Container(
             margin: const EdgeInsets.only(right: 8),
-            child: CircleAvatar(child: Text("우"), radius: 16, foregroundColor: Colors.green,),
+            child: CircleAvatar(child: Text(name[0]), radius: 16, foregroundColor: Colors.green,),
           ),
           Container(
             child: Container(

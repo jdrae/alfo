@@ -120,6 +120,7 @@ class _EditScreenState extends State<EditScreen>{
         doc.reference.delete();
       });
     });
+    setState((){});
   }
 
   void _onModified(String unique){
@@ -154,6 +155,8 @@ class _EditScreenState extends State<EditScreen>{
         doc.reference.update({field: value});
       });
     });
+    setState((){});
+
   }
 
   void _onIdModified(String unique){

@@ -28,7 +28,7 @@ class Header extends StatelessWidget {
           Container(
             margin: EdgeInsets.symmetric(horizontal: 10),
             child: CircleAvatar(
-              child: Text(name), radius: 16, foregroundColor: Colors.green,
+              child: Text(name[0]), radius: 16, foregroundColor: Colors.green,
           )),
           Text(name, style: TextStyle(fontSize: 18)),
         ],

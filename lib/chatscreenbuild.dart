@@ -1,8 +1,10 @@
 import 'package:chatbot/screen/chatscreen.dart';
 import 'package:flutter/material.dart';
 
+class ChatBuilder extends StatelessWidget {
+  final String botName; final String name;
+  ChatBuilder(this.botName, this.name);
 
-class WeBot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -12,7 +14,7 @@ class WeBot extends StatelessWidget {
           width: 400,
           height: 600,
           child: Card(
-            child: ChatScreen("webot"),
+            child: ChatScreen(botName, name),
           ),
         ),
       ),
