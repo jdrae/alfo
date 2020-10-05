@@ -14,7 +14,7 @@ class ManageScreen extends StatelessWidget {
           SizedBox(
           width: 400,
           height: 600,
-          child: BotList(bots: [Bot('mebot','나'), Bot('youbot', '너'), Bot('webot', '우리'), Bot('together', '단체채팅방')]),
+          child: BotList(bots: [Bot('mebot','나'), Bot('youbot', '너'), Bot('webot', '우리'), Bot('together', '단체채팅방', true)]),
         ),
       ),
     );
@@ -24,7 +24,8 @@ class ManageScreen extends StatelessWidget {
 class Bot{
   final String name;
   final String description;
-  Bot(this.name, this.description);
+  bool many;
+  Bot(this.name, this.description, [this.many= false]);
 }
 
 class Chat{
@@ -71,11 +72,43 @@ class _EditScreenState extends State<EditScreen>{
   final _updateMsgController = TextEditingController();
   final _updateIdController = TextEditingController();
 
+  List<String> _botnames = ['나', '너', '우리'];
+  String selected;
+  
+
   void getMsgSize(){
     firestore.collection(widget.bot.name)
     .get().then((snap) {
       size = snap.size;
     });
+  }
+
+  Widget _buildDropDown(){
+    if(selected == null){
+      if(!widget.bot.many)
+        selected = widget.bot.description;
+      else selected = '나';
+    }
+
+    if(!widget.bot.many)
+      return Text("");
+    
+    else 
+    return Container(
+      margin: EdgeInsets.all(15),
+      alignment: Alignment(-1.0,0.0),
+      child: DropdownButton(
+        value: selected,
+        onChanged: (newValue){
+          setState((){
+            selected = newValue;
+          });
+        },
+        items: _botnames.map((bn){
+          return DropdownMenuItem(child: new Text(bn), value: bn);
+        }).toList(),
+      ),
+    );
   }
 
   Widget _buildTextComposer() {
@@ -104,10 +137,10 @@ class _EditScreenState extends State<EditScreen>{
     );
   }
   void _handleSubmitted(String text) {
-    String botName = widget.bot.name;
-    CollectionReference db = firestore.collection(botName);
+    CollectionReference db = firestore.collection(widget.bot.name);
     int newSize = size + 1;
-    db.add({'name': widget.bot.description, 'id': newSize, 'msg': text, 'unique': randomString(8)});
+    if(selected != null)
+    db.add({'name': selected, 'id': newSize, 'msg': text, 'unique': randomString(8)});
     _textController.clear();
     
     setState((){size = newSize;});
@@ -176,7 +209,9 @@ class _EditScreenState extends State<EditScreen>{
             FlatButton(
               child: Text("확인"),
               onPressed: (){
+                try{
                 this._handleUpdated(unique, int.parse(_updateIdController.text), "id"); Navigator.pop(context);
+                }catch(e){}
               },
             ),
             FlatButton(
@@ -203,6 +238,7 @@ class _EditScreenState extends State<EditScreen>{
           height: 600,
           child: Column(
             children:[
+            this._buildDropDown(),
             this._buildTextComposer(),
             Flexible(child: GetMessages(widget.bot.name, this._onDeleted, this._onModified, this._onIdModified)),
             ]

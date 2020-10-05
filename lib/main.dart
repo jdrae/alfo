@@ -8,10 +8,10 @@ class ChatApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      initialRoute: '/me',
+      initialRoute: '/manage',
       routes: {
         '/we': (context) => ChatBuilder('webot', '우리'),
-        '/you': (context) => ChatBuilder('webot', '우리'),
+        '/you': (context) => ChatBuilder('youbot', '너'),
         '/me': (context) => ChatBuilder('mebot', '나'),
         '/manage': (context) => ManageScreen(),
       },
