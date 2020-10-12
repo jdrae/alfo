@@ -21,7 +21,7 @@ class Bubble extends StatelessWidget{
               alignment: Alignment.topRight,
               child: Container(
                 constraints: BoxConstraints(
-                  maxWidth: MediaQuery.of(context).size.width * 0.60, //TODO: 데스크탑에서 깨짐
+                  maxWidth: 300 //MediaQuery.of(context).size.width * 0.60, 
                 ),
                 padding: EdgeInsets.fromLTRB(10,7,10,7),
                 margin: EdgeInsets.symmetric(vertical: 5),
@@ -57,7 +57,7 @@ class Bubble extends StatelessWidget{
           Container(
             constraints: BoxConstraints(
               maxWidth: 300,
-              //maxWidth: MediaQuery.of(context).size.width * 0.60, //TODO: 데스크탑에서 깨짐
+              //maxWidth: MediaQuery.of(context).size.width * 0.60, 
             ),
             padding: EdgeInsets.fromLTRB(10,7,10,7),
             margin: EdgeInsets.symmetric(vertical: 5),

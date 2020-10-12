@@ -1,3 +1,4 @@
+import 'package:chatbot/widget/selcard.dart';
 import 'package:flutter/material.dart';
 import 'package:chatbot/widget/bubble.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -12,7 +13,7 @@ class Intro extends StatefulWidget {
 class _IntroState extends State<Intro> with TickerProviderStateMixin {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-  final List<Bubble> _messages = [];
+  final List<Widget> _messages = [];
   int cnt = -1; int size = 0;
 
   @override
@@ -60,9 +61,32 @@ class _IntroState extends State<Intro> with TickerProviderStateMixin {
         rmsg.animationController.forward();
 
         cnt += 1;
-        if(cnt<size) this._answer();
+        if(cnt<1) this._answer(); //<size
+        else{
+          SelCard sel = this.makeCard("호", "호호");
+          Timer(Duration(milliseconds: 1000),(){
+            setState((){
+              _messages.insert(0,sel);
+            });
+            sel.animationController.forward();
+          });
+        }
       });
     });
+  }
+
+  SelCard makeCard(String name, String text){
+    return SelCard(
+      qcards: [
+        QCard(text: "나와\n대화하기", todo: "mebot"),
+        QCard(text: "너와\n대화하기", todo: "youbot"),
+        QCard(text: "우리와\n대화하기", todo: "webot")
+      ],
+      animationController: AnimationController(
+        duration: Duration(milliseconds: 400),
+        vsync: this,
+      )
+    );
   }
 
   void getMsgSize(){
