@@ -2,6 +2,11 @@
 
 chatting ui from [https://codelabs.developers.google.com/codelabs/flutter/#0](https://codelabs.developers.google.com/codelabs/flutter/#0)
 
-routes [https://medium.com/flutter/flutter-web-navigating-urls-using-named-routes-307e1b1e2050](https://medium.com/flutter/flutter-web-navigating-urls-using-named-routes-307e1b1e2050)
-
 deployed in [https://alfo-80c78.web.app](https://alfo-80c78.web.app)
+
+
+[how to deploy](https://medium.com/flutter/must-try-use-firebase-to-host-your-flutter-app-on-the-web-852ee533a469)
+
+`flutter build web`
+
+`firebase deploy`
