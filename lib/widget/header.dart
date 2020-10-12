@@ -17,15 +17,15 @@ class Header extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
-          /*
+          
           IconButton(
             alignment: Alignment.center,
             icon: Icon(Icons.arrow_back, color: Colors.black12),
             onPressed: () {
-              
+              Navigator.pop(context);
             },
           ),
-          */
+          
           Container(
             margin: EdgeInsets.symmetric(horizontal: 10),
             child: CircleAvatar(

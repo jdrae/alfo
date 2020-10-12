@@ -27,7 +27,7 @@ class _IntroState extends State<Intro> with TickerProviderStateMixin {
   @override
   void initState(){
     super.initState();
-    if(size == 0){ this.getMsgSize();}
+    if(size == 0){ this.getMsgSize('intro');}
   }
 
   Bubble makeBubble(String name, String text, bool isMe){
@@ -43,9 +43,9 @@ class _IntroState extends State<Intro> with TickerProviderStateMixin {
   }
 
 
-  void _answer(){
+  void _answer(coll){
     if(cnt == -1) return;
-    firestore.collection("mebot")
+    firestore.collection(coll)
     .orderBy('id').get()
     .then((querySnapshot) {
       
@@ -53,6 +53,7 @@ class _IntroState extends State<Intro> with TickerProviderStateMixin {
       Bubble rmsg = this.makeBubble("나",doc.get('msg'), false);
       int sec = doc.get('msg').toString().length * 120; // 글자 길이에 따라 답장 속도
       if(sec > 2500) sec = 2500; //최대 속도 3초
+      if(cnt == 0) sec = 100; // 처음일 경우 빨리
 
       Timer(Duration(milliseconds: sec),(){
         setState(() {
@@ -61,10 +62,10 @@ class _IntroState extends State<Intro> with TickerProviderStateMixin {
         rmsg.animationController.forward();
 
         cnt += 1;
-        if(cnt<1) this._answer(); //<size
-        else{
-          SelCard sel = this.makeCard("호", "호호");
-          Timer(Duration(milliseconds: 1000),(){
+        if(cnt<size) this._answer(coll); //<size
+        else if (coll=='intro'){
+          SelCard sel = this.makeCard();
+          Timer(Duration(milliseconds: 1500),(){
             setState((){
               _messages.insert(0,sel);
             });
@@ -75,27 +76,30 @@ class _IntroState extends State<Intro> with TickerProviderStateMixin {
     });
   }
 
-  SelCard makeCard(String name, String text){
+  SelCard makeCard(){
     return SelCard(
       qcards: [
-        QCard(text: "나와\n대화하기", todo: "mebot"),
-        QCard(text: "너와\n대화하기", todo: "youbot"),
-        QCard(text: "우리와\n대화하기", todo: "webot")
+        QCard(text: "나와\n대화하기", todo: "/me"),
+        QCard(text: "너와\n대화하기", todo: "/you"),
+        QCard(text: "우리와\n대화하기", todo: "/we")
       ],
       animationController: AnimationController(
         duration: Duration(milliseconds: 400),
         vsync: this,
-      )
+      ),
+      callback: (){
+        this.getMsgSize('mebot');
+      }
     );
   }
 
-  void getMsgSize(){
-    firestore.collection("mebot")
+  void getMsgSize(coll){
+    firestore.collection(coll)
     .get().then((snap) {
       size = snap.size;
     });
     cnt = 0;
-    this._answer();
+    this._answer(coll);
   }
 
 

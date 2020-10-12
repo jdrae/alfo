@@ -7,11 +7,11 @@ class QCard{
 }
 
 class SelCard extends StatelessWidget{
-  SelCard({this.qcards, this.animationController});
+  SelCard({this.qcards, this.animationController, this.callback});
   
   final List<QCard> qcards;
   final AnimationController animationController; 
-
+  final Function callback;
   @override
   Widget build(BuildContext context) {
     return SizeTransition(
@@ -27,10 +27,17 @@ class SelCard extends StatelessWidget{
                 itemCount: qcards.length,
                 itemBuilder: (BuildContext context, int position) {
                   return Card(
+                    color: Colors.grey[50],
                     margin: EdgeInsets.all(7),
                     child: InkWell(
                       onTap: () {
-                        print(qcards[position].todo);
+                        var link =qcards[position].todo;
+                        if(link == '/me'){
+                          this.callback();
+                        }
+                        else{
+                          Navigator.pushNamed(context, qcards[position].todo); 
+                        }
                       },
                       child: Container(
                         width: 140,

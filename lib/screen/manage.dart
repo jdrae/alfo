@@ -14,7 +14,7 @@ class ManageScreen extends StatelessWidget {
           SizedBox(
           width: 400,
           height: 600,
-          child: BotList(bots: [Bot('mebot','나'), Bot('youbot', '너'), Bot('webot', '우리'), Bot('together', '단체채팅방', true)]),
+          child: BotList(bots: [Bot('intro','나'),Bot('mebot','나'), Bot('youbot', '너'), Bot('webot', '우리'), Bot('together', '단체채팅방', true)]),
         ),
       ),
     );
