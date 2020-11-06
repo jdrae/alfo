@@ -36,7 +36,7 @@ class SelCard extends StatelessWidget{
                           this.callback();
                         }
                         else{
-                          Navigator.pushNamed(context, qcards[position].todo); 
+                            Navigator.pushNamed(context, qcards[position].todo); 
                         }
                       },
                       child: Container(

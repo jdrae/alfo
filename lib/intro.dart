@@ -43,6 +43,20 @@ class _IntroState extends State<Intro> with TickerProviderStateMixin {
   }
 
 
+  void _answerQuestion(text){
+    Bubble rmsg = this.makeBubble("나",text, false);
+    int sec = text.length * 120; // 글자 길이에 따라 답장 속도
+    if(sec > 2500) sec = 2500; //최대 속도 3초
+    if(cnt == 0) sec = 100; // 처음일 경우 빨리
+
+    Timer(Duration(milliseconds: sec),(){
+      setState(() {
+        _messages.insert(0,rmsg);
+      });
+      rmsg.animationController.forward();
+    });
+  }
+
   void _answer(coll){
     if(cnt == -1) return;
     firestore.collection(coll)
@@ -50,6 +64,28 @@ class _IntroState extends State<Intro> with TickerProviderStateMixin {
     .then((querySnapshot) {
       
       var doc = querySnapshot.docs[cnt];
+      if(coll == "mebot" && doc.get('isCard')){
+        SelCard sel =SelCard(
+          qcards: [
+            QCard(text: doc.get('msg'), todo: doc.get('ans'))
+          ],
+          animationController: AnimationController(
+            duration: Duration(milliseconds: 400),
+            vsync: this,
+          ),
+          callback: (){
+            this._answerQuestion(doc.get('ans'));
+          }
+        );
+        Timer(Duration(milliseconds: 1500),(){
+            setState((){
+              _messages.insert(0,sel);
+            });
+            sel.animationController.forward();
+        });
+        return;
+      }
+
       Bubble rmsg = this.makeBubble("나",doc.get('msg'), false);
       int sec = doc.get('msg').toString().length * 120; // 글자 길이에 따라 답장 속도
       if(sec > 2500) sec = 2500; //최대 속도 3초
@@ -62,7 +98,7 @@ class _IntroState extends State<Intro> with TickerProviderStateMixin {
         rmsg.animationController.forward();
 
         cnt += 1;
-        if(cnt<size) this._answer(coll); //<size
+        if(cnt<2) this._answer(coll); //TODO: cnt < size
         else if (coll=='intro'){
           SelCard sel = this.makeCard();
           Timer(Duration(milliseconds: 1500),(){

@@ -64,6 +64,9 @@ class EditScreen extends StatefulWidget{
   _EditScreenState createState() => _EditScreenState();
 }
 
+List<String> tog_option = ["나", "너", "우리"];
+List<String> qa_option = ["일반", "질문", "답"]; //Q, A, Nothing
+
 class _EditScreenState extends State<EditScreen>{
   FirebaseFirestore firestore = FirebaseFirestore.instance;
   List<Chat> chatlist = new List<Chat>();
@@ -73,8 +76,8 @@ class _EditScreenState extends State<EditScreen>{
   final _updateIdController = TextEditingController();
 
   List<String> _botnames = ['나', '너', '우리'];
-  String selected;
-  
+  String _character;
+  String _qORa = "";
 
   void getMsgSize(){
     firestore.collection(widget.bot.name)
@@ -83,32 +86,95 @@ class _EditScreenState extends State<EditScreen>{
     });
   }
 
-  Widget _buildDropDown(){
-    if(selected == null){
-      if(!widget.bot.many)
-        selected = widget.bot.description;
-      else selected = '나';
+  Widget _buildRadioBtn(String name){
+    if(name == 'together'){
+      _character = "나";
+      return Row(
+      children: <Widget>[
+        Expanded(child: ListTile(
+          title: Text(tog_option[0]),
+          leading: Radio(
+            value: tog_option[0],
+            groupValue: _character,
+            onChanged: (String value) {
+              setState(() {
+                _character = value;
+              });
+            },
+          ),
+        )),
+        Expanded(child: ListTile(
+          title: Text(tog_option[1]),
+          leading: Radio(
+            value: tog_option[1],
+            groupValue: _character,
+            onChanged: (String value) {
+              setState(() {
+                _character = value;
+              });
+            },
+          ),
+        )),
+        Expanded(child: ListTile(
+          title: Text(tog_option[2]),
+          leading: Radio(
+            value: tog_option[2],
+            groupValue: _character,
+            onChanged: (String value) {
+              setState(() {
+                _character = value;
+              });
+            },
+          ),
+        )),
+        ]
+      );
     }
-
-    if(!widget.bot.many)
+    else if(name == "mebot"){
+      return Row(
+      children: <Widget>[
+        Expanded(child: ListTile(
+          title: Text(qa_option[0]),
+          leading: Radio(
+            value: "",
+            groupValue: _qORa,
+            onChanged: (String value) {
+              setState(() {
+                _qORa = value;
+              });
+            },
+          ),
+        )),
+        Expanded(child: ListTile(
+          title: Text(qa_option[1]),
+          leading: Radio(
+            value: "0",
+            groupValue: _qORa,
+            onChanged: (String value) {
+              setState(() {
+                _qORa = value;
+              });
+            },
+          ),
+        )),
+        Expanded(child: ListTile(
+          title: Text(qa_option[2]),
+          leading: Radio(
+            value: "1",
+            groupValue: _qORa,
+            onChanged: (String value) {
+              setState(() {
+                _qORa = value;
+              });
+            },
+          ),
+        )),
+        ]
+      );
+    }
+    else{
       return Text("");
-    
-    else 
-    return Container(
-      margin: EdgeInsets.all(15),
-      alignment: Alignment(-1.0,0.0),
-      child: DropdownButton(
-        value: selected,
-        onChanged: (newValue){
-          setState((){
-            selected = newValue;
-          });
-        },
-        items: _botnames.map((bn){
-          return DropdownMenuItem(child: new Text(bn), value: bn);
-        }).toList(),
-      ),
-    );
+    }
   }
 
   Widget _buildTextComposer() {
@@ -139,8 +205,9 @@ class _EditScreenState extends State<EditScreen>{
   void _handleSubmitted(String text) {
     CollectionReference db = firestore.collection(widget.bot.name);
     int newSize = size + 1;
-    if(selected != null)
-    db.add({'name': selected, 'id': newSize, 'msg': text, 'unique': randomString(8)});
+    if(_character == null) _character = widget.bot.description;
+    db.add({'name': _character, 'id': newSize, 'msg': text, 'unique': _qORa + randomString(8)});
+    
     _textController.clear();
     
     setState((){size = newSize;});
@@ -238,7 +305,7 @@ class _EditScreenState extends State<EditScreen>{
           height: 600,
           child: Column(
             children:[
-            this._buildDropDown(),
+            this._buildRadioBtn(widget.bot.name),
             this._buildTextComposer(),
             Flexible(child: GetMessages(widget.bot.name, this._onDeleted, this._onModified, this._onIdModified)),
             ]
@@ -276,15 +343,29 @@ class MsgTile extends StatelessWidget{
                   onPressed: () => _onIdModified(chat.unique),
                 )
               ),
-              Container(
-                margin: EdgeInsets.only(right: 8),
-                child: CircleAvatar(
-                  child: Text(chat.name[0]), radius: 16, foregroundColor: Colors.green,
-              )),
+              chat.unique.length == 9 ?  
+                  chat.unique[0] == '0' ? //QUESTION
+                  Container(
+                    margin: EdgeInsets.only(right: 8),
+                    child: CircleAvatar(
+                      child: Text("Q"), radius: 16, foregroundColor: Colors.amber,
+                  ))
+                  : //ANSWER
+                  Container(
+                    margin: EdgeInsets.only(right: 8),
+                    child: CircleAvatar(
+                      child: Text("A"), radius: 16, foregroundColor: Colors.red,
+                  ))
+                : 
+                Container(
+                  margin: EdgeInsets.only(right: 8),
+                  child: CircleAvatar(
+                    child: Text(chat.name[0]), radius: 16, foregroundColor: Colors.green,
+                )),
               chat.msg != null ?
-              Expanded(child: Text(chat.msg, 
-                    style: TextStyle(fontSize: 15)))
-              : Text(" ")
+                Expanded(child: Text(chat.msg, 
+                      style: TextStyle(fontSize: 15)))
+                : Text(" ")
             ,
             TextButton(
               child: Text("수정"),

@@ -14,7 +14,6 @@ class ChatApp extends StatelessWidget {
         '/': (context) => Intro(),
         '/we': (context) => ChatBuilder('webot', '우리'),
         '/you': (context) => ChatBuilder('youbot', '너'),
-        '/me': (context) => ChatBuilder('mebot', '나'),
         '/manage': (context) => ManageScreen(),
       },
       debugShowCheckedModeBanner: false
