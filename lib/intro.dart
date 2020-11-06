@@ -16,6 +16,18 @@ class _IntroState extends State<Intro> with TickerProviderStateMixin {
   final List<Widget> _messages = [];
   int cnt = -1; int size = 0;
 
+  Bubble makeBubble(String name, String text, bool isMe){
+      return Bubble(
+            name: name,
+            text: text,
+            animationController: AnimationController(
+              duration: Duration(milliseconds: 400),
+              vsync: this,
+            ),
+            isMe: isMe
+          );
+  }
+
   @override
   void dispose() {
     for (Bubble message in _messages) {
@@ -27,115 +39,54 @@ class _IntroState extends State<Intro> with TickerProviderStateMixin {
   @override
   void initState(){
     super.initState();
-    if(size == 0){ this.getMsgSize('intro');}
+    if(size == 0){ this.start('intro');}
   }
 
-  Bubble makeBubble(String name, String text, bool isMe){
-    return Bubble(
-          name: name,
-          text: text,
-          animationController: AnimationController(
-            duration: Duration(milliseconds: 400),
-            vsync: this,
-          ),
-          isMe: isMe
-        );
-  }
-
-
-  void _answerQuestion(text){
-    Bubble rmsg = this.makeBubble("나",text, false);
-    int sec = text.length * 120; // 글자 길이에 따라 답장 속도
-    if(sec > 2500) sec = 2500; //최대 속도 3초
-    if(cnt == 0) sec = 100; // 처음일 경우 빨리
-
-    Timer(Duration(milliseconds: sec),(){
-      setState(() {
-        _messages.insert(0,rmsg);
-      });
-      rmsg.animationController.forward();
-    });
-  }
-
-  void _answer(coll){
-    if(cnt == -1) return;
-    firestore.collection(coll)
-    .orderBy('id').get()
-    .then((querySnapshot) {
-      
-      var doc = querySnapshot.docs[cnt];
-      if(coll == "mebot" && doc.get('isCard')){
-        SelCard sel =SelCard(
-          qcards: [
-            QCard(text: doc.get('msg'), todo: doc.get('ans'))
-          ],
-          animationController: AnimationController(
-            duration: Duration(milliseconds: 400),
-            vsync: this,
-          ),
-          callback: (){
-            this._answerQuestion(doc.get('ans'));
-          }
-        );
-        Timer(Duration(milliseconds: 1500),(){
-            setState((){
-              _messages.insert(0,sel);
-            });
-            sel.animationController.forward();
-        });
-        return;
-      }
-
-      Bubble rmsg = this.makeBubble("나",doc.get('msg'), false);
-      int sec = doc.get('msg').toString().length * 120; // 글자 길이에 따라 답장 속도
-      if(sec > 2500) sec = 2500; //최대 속도 3초
-      if(cnt == 0) sec = 100; // 처음일 경우 빨리
-
-      Timer(Duration(milliseconds: sec),(){
-        setState(() {
-          _messages.insert(0,rmsg);
-        });
-        rmsg.animationController.forward();
-
-        cnt += 1;
-        if(cnt<2) this._answer(coll); //TODO: cnt < size
-        else if (coll=='intro'){
-          SelCard sel = this.makeCard();
-          Timer(Duration(milliseconds: 1500),(){
-            setState((){
-              _messages.insert(0,sel);
-            });
-            sel.animationController.forward();
-          });
-        }
-      });
-    });
-  }
-
-  SelCard makeCard(){
-    return SelCard(
-      qcards: [
-        QCard(text: "나와\n대화하기", todo: "/me"),
-        QCard(text: "너와\n대화하기", todo: "/you"),
-        QCard(text: "우리와\n대화하기", todo: "/we")
-      ],
-      animationController: AnimationController(
-        duration: Duration(milliseconds: 400),
-        vsync: this,
-      ),
-      callback: (){
-        this.getMsgSize('mebot');
-      }
-    );
-  }
-
-  void getMsgSize(coll){
-    firestore.collection(coll)
+  void start(coll) async{
+    await firestore.collection(coll)
     .get().then((snap) {
       size = snap.size;
     });
-    cnt = 0;
-    this._answer(coll);
+    print(size);
+    _answer(0,'intro');
+    /*
+    for(cnt = 0; cnt < size; cnt ++){
+      await answer(cnt, coll);
+      print(cnt);
+      
+    }*/
+  }
+
+  Future<void> _answer(int idx, String coll) async{
+    await firestore.collection(coll).orderBy('id').get()
+    .then((qs){
+      var doc = qs.docs[idx];
+      var isCard = doc.get('unique');
+      print(doc.get("msg"));
+      
+      int sec = doc.get('msg').toString().length * 120; // 글자 길이에 따라 답장 속도
+      if(sec > 2500) sec = 2500; //최대 속도 3초
+      if(cnt == 0) sec = 100; // 처음일 경우 빨리
+      var msg;
+      //QUESTION
+      if(isCard.length == 9 && isCard[0] == '0'){ 
+        return;
+      }
+      //MSG
+      else{ 
+        msg = this.makeBubble("나" ,doc.get('msg'), false);
+      }
+
+      Timer(Duration(milliseconds: sec),(){
+        setState(() {
+          _messages.insert(0,msg);
+        });
+        msg.animationController.forward();
+
+        idx += 1;
+        if(idx<size) this._answer(idx, coll);
+    });
+    });
   }
 
 
@@ -163,7 +114,7 @@ class _IntroState extends State<Intro> with TickerProviderStateMixin {
       )
     ));
   }
-  
+
   @override
   Widget build(BuildContext context){
     return Scaffold(
@@ -200,7 +151,4 @@ class _IntroState extends State<Intro> with TickerProviderStateMixin {
     );
     
   }
-
 }
-
-
