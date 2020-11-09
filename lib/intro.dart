@@ -33,7 +33,7 @@ class _IntroState extends State<Intro> with TickerProviderStateMixin {
 
     firestore.collection(coll).orderBy('id').get()
     .then((qs){
-      String ques = ""; ;
+      String ques = "";
       for(; cnt < size; cnt ++){
         var doc = qs.docs[cnt];
         var isCard = doc.get('unique');
@@ -59,11 +59,22 @@ class _IntroState extends State<Intro> with TickerProviderStateMixin {
         duration: Duration(milliseconds: 400),
         vsync: this,
       ),
-      callback: (List<String> ans) => {
-        for(int i = 0; i<ans.length; i++)
-          print(ans[i])
-      }
+      callback: (List<String> ans) => _cardanswer(ans)
     );
+  }
+
+  void _cardanswer(List<String> ans){
+    int sec = 0;
+    for(int i = 0; i<ans.length; i++){
+      sec += msgsec(ans[i]);
+      Bubble msg = this.makeBubble("나", ans[i], false);
+      Timer(Duration(milliseconds: sec),(){
+      setState(() {
+        _messages.insert(0,msg);
+      });
+      msg.animationController.forward();
+      });
+    }
   }
 
   @override
@@ -77,7 +88,7 @@ class _IntroState extends State<Intro> with TickerProviderStateMixin {
   @override
   void initState(){
     super.initState();
-    if(size == 0){ this.start('intro');}
+    if(size == 0) this.start('intro');
   }
 
   void start(coll) async{
@@ -89,16 +100,21 @@ class _IntroState extends State<Intro> with TickerProviderStateMixin {
     _answer(coll);
   }
 
+  int msgsec(String text){
+    int sec = text.length * 120; // 글자 길이에 따라 답장 속도
+    if(sec > 2500) sec = 2500; //최대 속도 3초
+    if(sec < 100 || cnt == 0) sec = 100; // 처음일 경우 빨리
+    return sec;
+  }
+
   void _answer(String coll) async{
     await firestore.collection(coll).orderBy('id').get()
     .then((qs){
       var doc = qs.docs[cnt];
       var isCard = doc.get('unique');
       
-      int sec = doc.get('msg').toString().length * 120; // 글자 길이에 따라 답장 속도
-      if(sec > 2500) sec = 2500; //최대 속도 3초
-      if(sec < 100 || cnt == 0) sec = 100; // 처음일 경우 빨리
       var msg;
+      int sec = msgsec(doc.get('msg').toString());
       //QUESTION
       if(isCard.length == 9 && isCard[0] == '0'){ 
         msg = this.makeCard(coll);
