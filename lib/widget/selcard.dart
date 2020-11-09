@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
 class QCard{
+  int idx;
   String ques;
   List<String> ans;
-  QCard(this.ques, this.ans);
+  QCard(this.idx, this.ques, this.ans);
   
 }
 
@@ -33,7 +34,7 @@ class SelCard extends StatelessWidget{
                     margin: EdgeInsets.all(7),
                     child: InkWell(
                       onTap: () {
-                        this.callback(qcards[position].ans);
+                        this.callback(qcards[position]);
                       },
                       child: Container(
                         width: 140,

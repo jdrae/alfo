@@ -15,6 +15,7 @@ class _IntroState extends State<Intro> with TickerProviderStateMixin {
 
   final List<Widget> _messages = [];
   int cnt = -1; int size = 0; bool wait = false;
+  List<QCard> qcards = [];
 
   Bubble makeBubble(String name, String text, bool isMe){
       return Bubble(
@@ -29,37 +30,45 @@ class _IntroState extends State<Intro> with TickerProviderStateMixin {
   }
 
   SelCard makeCard(coll){
-    List<QCard> qcards = [];
-
-    firestore.collection(coll).orderBy('id').get()
-    .then((qs){
-      String ques = "";
-      for(; cnt < size; cnt ++){
-        var doc = qs.docs[cnt];
-        var isCard = doc.get('unique');
-        if(isCard.length != 9) break;
-        if(isCard[0] == '0') ques = doc.get('msg');
-        else {
-          List<String> ans = [];
-          for(; cnt < size; cnt++){
-            var tmp = qs.docs[cnt];
-            if(tmp.get('unique')[0] != '1') {cnt--; break;}
-            ans.add(tmp.get('msg'));
+    if(qcards.length == 0){  
+      firestore.collection(coll).orderBy('id').get()
+      .then((qs){
+        String ques = ""; int idx = -1;
+        for(; cnt < size; cnt ++){
+          var doc = qs.docs[cnt];
+          var isCard = doc.get('unique');
+          if(isCard.length != 9) break;
+          if(isCard[0] == '0') {ques = doc.get('msg'); idx += 1;}
+          else {
+            List<String> ans = [];
+            for(; cnt < size; cnt++){
+              var tmp = qs.docs[cnt];
+              if(tmp.get('unique')[0] != '1') {cnt--; break;}
+              ans.add(tmp.get('msg'));
+            }
+            QCard card = QCard(idx, ques, ans);
+            if(qcards.length < 4) qcards.add(card);
+            else break;
           }
-          QCard card = QCard(ques, ans);
-          qcards.add(card);
         }
-      }
-      if(qcards.length == 0) throw Exception("no selcards");
-    });
-
+        if(qcards.length == 0) throw Exception("no selcards");
+      });
+    }
     return SelCard(
       qcards: qcards,
       animationController: AnimationController(
         duration: Duration(milliseconds: 400),
         vsync: this,
       ),
-      callback: (List<String> ans) => _cardanswer(ans)
+      callback: (QCard card){
+        _cardanswer(card.ans);
+        /*
+        for(int i = 0; i<qcards.length; i++){
+          if(qcards[i].idx == card.idx){
+            qcards.remove(card);
+          }
+        }*/
+      }
     );
   }
 
@@ -68,13 +77,11 @@ class _IntroState extends State<Intro> with TickerProviderStateMixin {
     for(int i = 0; i<ans.length; i++){
       sec += msgsec(ans[i]);
       Bubble msg = this.makeBubble("나", ans[i], false);
-      Timer(Duration(milliseconds: sec),(){
-      setState(() {
-        _messages.insert(0,msg);
-      });
-      msg.animationController.forward();
-      });
+      addmsg(sec, msg);
     }
+    sec+= 1000;
+    SelCard cards = this.makeCard('mebot');
+    addmsg(sec, cards);
   }
 
   @override
@@ -103,18 +110,28 @@ class _IntroState extends State<Intro> with TickerProviderStateMixin {
   int msgsec(String text){
     int sec = text.length * 120; // 글자 길이에 따라 답장 속도
     if(sec > 2500) sec = 2500; //최대 속도 3초
-    if(sec < 100 || cnt == 0) sec = 100; // 처음일 경우 빨리
+    if(cnt == 0) sec = 100; // 처음일 경우 빨리
     return sec;
   }
 
+  void addmsg(sec, msg){
+    Timer(Duration(milliseconds: sec),(){
+    setState(() {
+      _messages.insert(0,msg);
+    });
+    msg.animationController.forward();
+    });
+  }
+
   void _answer(String coll) async{
+    var msg; int sec = 100;
+    
     await firestore.collection(coll).orderBy('id').get()
     .then((qs){
       var doc = qs.docs[cnt];
       var isCard = doc.get('unique');
       
-      var msg;
-      int sec = msgsec(doc.get('msg').toString());
+      sec = msgsec(doc.get('msg').toString());
       //QUESTION
       if(isCard.length == 9 && isCard[0] == '0'){ 
         msg = this.makeCard(coll);
@@ -124,19 +141,19 @@ class _IntroState extends State<Intro> with TickerProviderStateMixin {
       else{ 
         msg = this.makeBubble("나" ,doc.get('msg'), false);
       }
+    });
 
-      Timer(Duration(milliseconds: sec),(){
-        setState(() {
-          _messages.insert(0,msg);
-        });
-        msg.animationController.forward();
-
-        if(wait) return;
-
-        cnt += 1;
-        if(cnt < size) return _answer(coll);
-        if(coll == 'intro') return start('mebot');
+    Timer(Duration(milliseconds: sec),(){
+      setState(() {
+        _messages.insert(0,msg);
       });
+      msg.animationController.forward();
+
+      if(wait) return;
+
+      cnt += 1;
+      if(cnt < size) return _answer(coll);
+      if(coll == 'intro') return start('mebot');
     });
   }
 
