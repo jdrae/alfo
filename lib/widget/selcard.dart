@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
 class QCard{
-  final String text;
-  final String todo;
-  QCard({this.text, this.todo});
+  String ques;
+  List<String> ans;
+  QCard(this.ques, this.ans);
+  
 }
 
 class SelCard extends StatelessWidget{
@@ -32,18 +33,12 @@ class SelCard extends StatelessWidget{
                     margin: EdgeInsets.all(7),
                     child: InkWell(
                       onTap: () {
-                        var link =qcards[position].todo;
-                        if(link == '/me'){
-                          this.callback();
-                        }
-                        else{
-                            Navigator.pushNamed(context, qcards[position].todo); 
-                        }
+                        this.callback(qcards[position].ans);
                       },
                       child: Container(
                         width: 140,
                         padding: EdgeInsets.all(18),
-                        child: Text(qcards[position].text,
+                        child: Text(qcards[position].ques,
                           style: TextStyle(
                             color: Color((math.Random().nextDouble() * 0xFFFFFF).toInt()).withOpacity(1.0),
                             fontSize: 18,

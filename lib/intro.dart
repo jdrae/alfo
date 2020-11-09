@@ -28,6 +28,44 @@ class _IntroState extends State<Intro> with TickerProviderStateMixin {
           );
   }
 
+  SelCard makeCard(coll){
+    List<QCard> qcards = [];
+
+    firestore.collection(coll).orderBy('id').get()
+    .then((qs){
+      String ques = ""; ;
+      for(; cnt < size; cnt ++){
+        var doc = qs.docs[cnt];
+        var isCard = doc.get('unique');
+        if(isCard.length != 9) break;
+        if(isCard[0] == '0') ques = doc.get('msg');
+        else {
+          List<String> ans = [];
+          for(; cnt < size; cnt++){
+            var tmp = qs.docs[cnt];
+            if(tmp.get('unique')[0] != '1') {cnt--; break;}
+            ans.add(tmp.get('msg'));
+          }
+          QCard card = QCard(ques, ans);
+          qcards.add(card);
+        }
+      }
+      if(qcards.length == 0) throw Exception("no selcards");
+    });
+
+    return SelCard(
+      qcards: qcards,
+      animationController: AnimationController(
+        duration: Duration(milliseconds: 400),
+        vsync: this,
+      ),
+      callback: (List<String> ans) => {
+        for(int i = 0; i<ans.length; i++)
+          print(ans[i])
+      }
+    );
+  }
+
   @override
   void dispose() {
     for (Bubble message in _messages) {
@@ -63,8 +101,7 @@ class _IntroState extends State<Intro> with TickerProviderStateMixin {
       var msg;
       //QUESTION
       if(isCard.length == 9 && isCard[0] == '0'){ 
-        print(doc.get("msg"));
-        msg = this.makeBubble("나" ,doc.get('msg'), false);
+        msg = this.makeCard(coll);
         wait = true;
       }
       //MSG
@@ -78,8 +115,9 @@ class _IntroState extends State<Intro> with TickerProviderStateMixin {
         });
         msg.animationController.forward();
 
-        cnt += 1;
         if(wait) return;
+
+        cnt += 1;
         if(cnt < size) return _answer(coll);
         if(coll == 'intro') return start('mebot');
       });
