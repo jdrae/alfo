@@ -14,7 +14,7 @@ class _IntroState extends State<Intro> with TickerProviderStateMixin {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
 
   final List<Widget> _messages = [];
-  int cnt = -1; int size = 0;
+  int cnt = -1; int size = 0; bool wait = false;
 
   Bubble makeBubble(String name, String text, bool isMe){
       return Bubble(
@@ -47,30 +47,25 @@ class _IntroState extends State<Intro> with TickerProviderStateMixin {
     .get().then((snap) {
       size = snap.size;
     });
-    print(size);
-    _answer(0,'intro');
-    /*
-    for(cnt = 0; cnt < size; cnt ++){
-      await answer(cnt, coll);
-      print(cnt);
-      
-    }*/
+    cnt = 0;
+    _answer(coll);
   }
 
-  Future<void> _answer(int idx, String coll) async{
+  void _answer(String coll) async{
     await firestore.collection(coll).orderBy('id').get()
     .then((qs){
-      var doc = qs.docs[idx];
+      var doc = qs.docs[cnt];
       var isCard = doc.get('unique');
-      print(doc.get("msg"));
       
       int sec = doc.get('msg').toString().length * 120; // 글자 길이에 따라 답장 속도
       if(sec > 2500) sec = 2500; //최대 속도 3초
-      if(cnt == 0) sec = 100; // 처음일 경우 빨리
+      if(sec < 100 || cnt == 0) sec = 100; // 처음일 경우 빨리
       var msg;
       //QUESTION
       if(isCard.length == 9 && isCard[0] == '0'){ 
-        return;
+        print(doc.get("msg"));
+        msg = this.makeBubble("나" ,doc.get('msg'), false);
+        wait = true;
       }
       //MSG
       else{ 
@@ -83,9 +78,11 @@ class _IntroState extends State<Intro> with TickerProviderStateMixin {
         });
         msg.animationController.forward();
 
-        idx += 1;
-        if(idx<size) this._answer(idx, coll);
-    });
+        cnt += 1;
+        if(wait) return;
+        if(cnt < size) return _answer(coll);
+        if(coll == 'intro') return start('mebot');
+      });
     });
   }
 
